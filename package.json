@@ -27,7 +27,7 @@
   "dependencies": {
     "@advanced-rest-client/icons": "^4.0.0",
     "@anypoint-web-components/anypoint-signin": "^8.0.0",
-    "@anypoint-web-components/awc": "^1.0.6",
+    "@anypoint-web-components/awc": "^1.0.7",
     "lit-element": "^2.5.1",
     "lit-html": "^1.4.1"
   },
