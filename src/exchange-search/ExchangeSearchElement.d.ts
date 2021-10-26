@@ -4,8 +4,10 @@ import { ExchangeAsset } from '../types';
 /** @typedef {import('@anypoint-web-components/anypoint-signin').AnypointSigninElement} AnypointSigninElement */
 /** @typedef {import('../types').MediaQueryResult} MediaQueryResult */
 
-export declare const authHeaderValue: string;
 export declare const assetsUri: string;
+export declare const exchangeBaseUri: string;
+
+export declare const authHeaderValue: string;
 export declare const columnsValue: unique symbol;
 export declare const attachMediaQueries: unique symbol;
 export declare const detachMediaQueries: unique symbol;
@@ -239,6 +241,13 @@ export default class ExchangeSearchElement extends LitElement {
    * @attribute
    */
   columns: number|string;
+  /** 
+   * The API base URI to use to construct the assets query URL.
+   * This is mainly used to switch Exchange's environments.
+   * When not set the public base URI is used.
+   * @attribute
+   */
+  apiBase: string;
 
   constructor();
 
@@ -280,6 +289,11 @@ export default class ExchangeSearchElement extends LitElement {
   [enableList](): void;
 
   /**
+   * @returns The base URI of the query endpoint.
+   */
+  getAssetsUri(): string;
+
+  /**
    * Resets current list of results and makes a query to the Exchange server.
    * It will use current value of search query (which might be empty) to
    * search for an asset.
@@ -294,7 +308,7 @@ export default class ExchangeSearchElement extends LitElement {
    * Makes a query to the exchange server for more data.
    * It uses current `queryParams` to generate request.
    */
-  queryCurrent(): void;
+  queryCurrent(): Promise<void>;
 
   [exchangeResponse](e: ExchangeAsset[]): void;
 

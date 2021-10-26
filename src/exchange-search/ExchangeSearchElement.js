@@ -35,7 +35,8 @@ import { register, unregister, mediaResult } from './MediaQueryMatcher.js';
 /** @typedef {import('../types').ExchangeAsset} ExchangeAsset */
 /** @typedef {import('../types').MediaQueryResult} MediaQueryResult */
 
-export const assetsUri = 'https://anypoint.mulesoft.com/exchange/api/v2/assets';
+export const exchangeBaseUri = 'https://anypoint.mulesoft.com/exchange/api/v2';
+export const assetsUri = '/assets';
 
 export const authHeaderValue = Symbol('authHeaderValue');
 export const columnsValue = Symbol('columnsValue');
@@ -387,6 +388,12 @@ export default class ExchangeSearchElement extends LitElement {
        * view.
        */
       columns: { type: Number },
+      /** 
+       * The API base URI to use to construct the assets query URL.
+       * This is mainly used to switch Exchange's environments.
+       * When not set the public base URI is used.
+       */
+      apiBase: { type: String },
     };
   }
 
@@ -403,21 +410,15 @@ export default class ExchangeSearchElement extends LitElement {
     this.anypoint = false;
     this.outlined = false;
     this.forceOauthEvents = false;
-    /**
-     * @type {string}
-     */
+    /** @type {string} */
+    this.apiBase = undefined;
+    /** @type {string} */
     this.panelTitle = undefined;
-    /**
-     * @type {string}
-     */
+    /** @type {string} */
     this.exchangeRedirectUri = undefined;
-    /**
-     * @type {string}
-     */
+    /** @type {string} */
     this.exchangeClientId = undefined;
-    /**
-     * @type {ExchangeAsset[]}
-     */
+    /** @type {ExchangeAsset[]} */
     this.items = undefined;
 
     this[oauthCallback] = this[oauthCallback].bind(this);
@@ -554,6 +555,18 @@ export default class ExchangeSearchElement extends LitElement {
   }
 
   /**
+   * @returns {string} The base URI of the query endpoint.
+   */
+  getAssetsUri() {
+    const { apiBase=exchangeBaseUri } = this;
+    let base = apiBase;
+    if (base.endsWith('/')) {
+      base = base.substr(0, base.length - 1);
+    }
+    return `${base}${assetsUri}`;
+  }
+
+  /**
    * Makes a query to the exchange server for more data.
    * It uses current `queryParams` to generate request.
    */
@@ -566,7 +579,7 @@ export default class ExchangeSearchElement extends LitElement {
     this[queryingValue] = true;
     this[notifyQuerying]();
     this.requestUpdate();
-    const url = new URL(assetsUri);
+    const url = new URL(this.getAssetsUri());
     Object.keys(queryParams).forEach(key => {
       const value = queryParams[key];
       if (typeof value !== 'undefined') {
@@ -621,6 +634,8 @@ export default class ExchangeSearchElement extends LitElement {
     this.accessToken = undefined;
     this.signedIn = false;
     this[notifyTokenExpired]();
+    this[queryingValue] = false;
+    this[notifyQuerying]();
     this.requestUpdate();
   }
 
@@ -716,7 +731,7 @@ export default class ExchangeSearchElement extends LitElement {
    * @param {string=} old
    */
   [accessTokenChanged](token, old) {
-    if (token && !this.authInitialized) {
+    if (token && !this.authInitialized && !this.noAuto) {
       this.authInitialized = true;
       this.queryCurrent();
     }

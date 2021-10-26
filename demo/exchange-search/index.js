@@ -5,7 +5,8 @@ import '@anypoint-web-components/awc/anypoint-radio-button.js';
 import '@anypoint-web-components/awc/anypoint-radio-group.js';
 import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
 import '@advanced-rest-client/app/define/oauth2-authorization.js';
-import '../define/exchange-search.js';
+import '../../define/exchange-search.js';
+import env from '../env.js';
 
 class ComponentDemoPage extends DemoPage {
   constructor() {
@@ -14,18 +15,18 @@ class ComponentDemoPage extends DemoPage {
       'compatibility',
       'outlined',
       'columns',
-      'type'
+      'type',
+      'mockApi',
     ]);
-    this.componentName = 'exchange-search-panel';
+    this.componentName = 'exchange-search';
 
     this.redirectUrl = 'https://auth.advancedrestclient.com/oauth-popup.html';
     this.clientId = '2e38d46b60c5476584cdecba8b516711';
     this.columns = 'auto';
     this.type = 'rest-api'
     this.renderViewControls = true;
+    this.mockApi = true;
 
-    this._columnsHandler = this._columnsHandler.bind(this);
-    this._selectionHandler = this._selectionHandler.bind(this);
     window.addEventListener('anypoint-signin-aware-error', this._signInError.bind(this));
     window.addEventListener('oauth2-code-response', this._signInCode.bind(this));
   }
@@ -50,6 +51,10 @@ class ComponentDemoPage extends DemoPage {
     console.log(e.detail);
   }
 
+  get mockedBaseUri() {
+    return `http://localhost:${env.exchangeApiPort}/`;
+  }
+
   _demoTemplate() {
     const {
       redirectUrl,
@@ -70,6 +75,7 @@ class ComponentDemoPage extends DemoPage {
           anypointAuth
           exchangeRedirectUri="${redirectUrl}"
           exchangeClientId="${clientId}"
+          .apiBase="${this.mockApi ? this.mockedBaseUri : undefined}"
           @selected="${this._selectionHandler}"
         ></exchange-search>
 
@@ -175,6 +181,10 @@ class ComponentDemoPage extends DemoPage {
             value=""
           >Any asset</anypoint-radio-button>
         </anypoint-radio-group>
+      </div>
+
+      <div>
+        <anypoint-checkbox ?checked="${this.mockApi}" name="mockApi" @change="${this._toggleMainOption}">Use mocked API</anypoint-checkbox>
       </div>
     </section>
     `;

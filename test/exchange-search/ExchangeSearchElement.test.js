@@ -1,41 +1,58 @@
 import { fixture, assert, html, nextFrame } from '@open-wc/testing';
 import sinon from 'sinon';
 import { AuthorizationEventTypes } from '@advanced-rest-client/events';
-import { ExchangeServer } from './exchange-server-helper.js';
-import '../define/exchange-search.js';
+import '../../define/exchange-search.js';
 import { 
   queryingValue, enableList, enableGrid, exchangeResponse, typeChanged, 
   columnsValue, oauthCallback, setupAuthHeaders, listenOauth, unlistenOauth,
   authHeaderValue, exchangeResponseError,
-} from '../src/exchange-search/ExchangeSearchElement.js';
+} from '../../src/exchange-search/ExchangeSearchElement.js';
+import { AnypointMock } from '../AnypointMock.mjs';
+import env from '../env.js';
 
-/** @typedef {import('../').ExchangeSearchElement} ExchangeSearchPanelElement */
+/** @typedef {import('../../').ExchangeSearchElement} ExchangeSearchElement */
 
-describe('<exchange-search>', () => {
+describe('ExchangeSearchElement', () => {
+  const baseUri = `http://localhost:${env.exchangeApiPort}/`;
+  const partialBaseUri = `http://localhost:${env.exchangeApiPort}/partial/`;
+  const mock = new AnypointMock();
+
   /**
-   * @returns {Promise<ExchangeSearchPanelElement>} 
+   * @returns {Promise<ExchangeSearchElement>} 
    */
   async function basicFixture() {
-    return fixture(html`<exchange-search></exchange-search>`);
+    return fixture(html`<exchange-search .apiBase="${baseUri}"></exchange-search>`);
   }
 
   /**
-   * @returns {Promise<ExchangeSearchPanelElement>} 
+   * @returns {Promise<ExchangeSearchElement>} 
+   */
+  async function partialFixture() {
+    return fixture(html`<exchange-search .apiBase="${partialBaseUri}"></exchange-search>`);
+  }
+
+  /**
+   * @returns {Promise<ExchangeSearchElement>} 
    */
   async function authFixture() {
     return fixture(html`<exchange-search
       anypointAuth
       exchangeRedirectUri="https://domain.com"
       exchangeClientId="test1234"
-      forceOauthEvents></exchange-search>`);
+      forceOauthEvents
+      .apiBase="${baseUri}"
+    ></exchange-search>`);
   }
 
   /**
-   * @returns {Promise<ExchangeSearchPanelElement>} 
+   * @returns {Promise<ExchangeSearchElement>} 
    */
   async function noAutoFixture() {
-    return fixture(html`<exchange-search
-      noAuto></exchange-search>`);
+    return fixture(html`
+    <exchange-search
+      .apiBase="${baseUri}"
+      noAuto
+    ></exchange-search>`);
   }
 
   async function untilLoaded(element) {
@@ -50,16 +67,9 @@ describe('<exchange-search>', () => {
   }
 
   describe('basic with auto opened', () => {
-    beforeEach(() => {
-      ExchangeServer.createServer();
-    });
-
-    after(() => {
-      ExchangeServer.restore();
-    });
-
     describe('basic when auto querying', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -105,40 +115,47 @@ describe('<exchange-search>', () => {
     });
 
     describe('basic with data loaded', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
-      beforeEach(async () => {
-        element = await basicFixture();
+      it('querying is false', async () => {
+        const element = await basicFixture();
         await untilLoaded(element);
-      });
-
-      it('querying is false', () => {
         assert.isFalse(element.querying);
       });
 
-      it('dataUnavailable is computed', () => {
+      it('dataUnavailable is computed', async () => {
+        const element = await basicFixture();
+        await untilLoaded(element);
         assert.isFalse(element.dataUnavailable);
       });
 
-      it('items is set', () => {
+      it('items is set', async () => {
+        const element = await basicFixture();
+        await untilLoaded(element);
         assert.typeOf(element.items, 'array', 'items is an array');
-        assert.lengthOf(element.items, 5, 'items contains one page of results');
+        assert.lengthOf(element.items, 30, 'items contains one page of results');
       });
 
-      it('exchangeOffset is moved by number of items on the list', () => {
-        assert.equal(element.exchangeOffset, 5);
+      it('exchangeOffset is moved by number of items on the list', async () => {
+        const element = await basicFixture();
+        await untilLoaded(element);
+        assert.equal(element.exchangeOffset, 30);
       });
 
-      it('noMoreResults is true when less than offset', () => {
+      it('noMoreResults is true when less than offset', async () => {
+        const element = await partialFixture();
+        await untilLoaded(element);
         assert.isTrue(element.noMoreResults);
       });
 
-      it('renderLoadMore is false when not querying and no more results', () => {
+      it('renderLoadMore is false when not querying and no more results', async () => {
+        const element = await partialFixture();
+        await untilLoaded(element);
         assert.isFalse(element.renderLoadMore);
       });
     });
 
     describe('reset()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
         // @ts-ignore
@@ -168,7 +185,8 @@ describe('<exchange-search>', () => {
     });
 
     describe('[enableList]()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
         await untilLoaded(element);
@@ -188,7 +206,8 @@ describe('<exchange-search>', () => {
     });
 
     describe('[enableGrid]()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
         element.listView = true;
@@ -209,7 +228,8 @@ describe('<exchange-search>', () => {
     });
 
     describe('updateSearch()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -230,7 +250,8 @@ describe('<exchange-search>', () => {
     });
 
     describe('#dataUnavailable', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      /** @type ExchangeSearchElement */
+      let element;
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -254,7 +275,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('queryCurrent()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -266,18 +287,13 @@ describe('<exchange-search>', () => {
     });
 
     describe('[exchangeResponse]()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       let emptyResponse;
       let dataResponse;
       beforeEach(async () => {
         element = await basicFixture();
         emptyResponse = [];
-        dataResponse = [
-          ExchangeServer.createListObject(),
-          ExchangeServer.createListObject(),
-          ExchangeServer.createListObject(),
-          ExchangeServer.createListObject()
-        ];
+        dataResponse = mock.exchangeAssetsList(env.exchangeApiPort, 4);
       });
 
       it('Sets noMoreResults when no data', () => {
@@ -324,7 +340,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('#queryParams', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -353,7 +369,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('#types()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -391,7 +407,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('[itemActionHandler]()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
         await untilLoaded(element);
@@ -416,7 +432,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('Authorization properties', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await authFixture();
       });
@@ -451,7 +467,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('#effectivePanelTitle', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -479,7 +495,7 @@ describe('<exchange-search>', () => {
     });
 
     describe('[typeChanged]()', () => {
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
       });
@@ -494,7 +510,7 @@ describe('<exchange-search>', () => {
 
     describe('[computeColumns]()', () => {
       const auto = 'auto';
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await basicFixture();
         element.columns = auto;
@@ -510,31 +526,8 @@ describe('<exchange-search>', () => {
       });
     });
 
-    describe('noAuto attribute', () => {
-      beforeEach(async () => {
-        ExchangeServer.createServer();
-      });
-
-      after(() => {
-        ExchangeServer.restore();
-      });
-
-      it('does not request for data when authorization is not set', async () => {
-        await noAutoFixture();
-        assert.lengthOf(ExchangeServer.srv.requests, 0);
-      });
-    });
-
     describe('[oauthCallback]()', () => {
-      beforeEach(async () => {
-        ExchangeServer.createServer();
-      });
-
-      after(() => {
-        ExchangeServer.restore();
-      });
-
-      let element = /** @type ExchangeSearchPanelElement */ (null);
+      let element = /** @type ExchangeSearchElement */ (null);
       beforeEach(async () => {
         element = await noAutoFixture();
       });
@@ -561,8 +554,8 @@ describe('<exchange-search>', () => {
     });
   });
 
-  describe.skip('[setupAuthHeaders]()', () => {
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+  describe('[setupAuthHeaders]()', () => {
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
     });
@@ -583,7 +576,7 @@ describe('<exchange-search>', () => {
   });
 
   describe('[anypointAuthChanged]()', () => {
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
     });
@@ -603,15 +596,7 @@ describe('<exchange-search>', () => {
   });
 
   describe('[querySearchHandler]()', () => {
-    beforeEach(async () => {
-      ExchangeServer.createServer();
-    });
-
-    after(() => {
-      ExchangeServer.restore();
-    });
-
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
     });
@@ -633,15 +618,7 @@ describe('<exchange-search>', () => {
   });
 
   describe('[queryKeydownHandler]()', () => {
-    beforeEach(async () => {
-      ExchangeServer.createServer();
-    });
-
-    after(() => {
-      ExchangeServer.restore();
-    });
-
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
     });
@@ -666,7 +643,7 @@ describe('<exchange-search>', () => {
   });
 
   describe('[exchangeResponseError]()', () => {
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
       await nextFrame();
@@ -678,53 +655,26 @@ describe('<exchange-search>', () => {
       assert.isFalse(element.querying);
     });
 
-    it.skip('clears accessToken when status is 401', () => {
-      element.accessToken = 'test';
-      const ajax = element.shadowRoot.querySelector('iron-ajax');
-      ajax.dispatchEvent(new CustomEvent('error', {
-        detail: {
-          request: {
-            status: 401
-          }
-        }
-      }));
-      assert.equal(element.accessToken, 'test');
+    it('clears authorization state when response status is 401', async () => {
+      element.signedIn = true;
+      element.accessToken = 'expired';
+      await element.queryCurrent();
+      assert.isUndefined(element.accessToken, 'accessToken is cleared');
+      assert.isFalse(element.signedIn, 'signedIn is false');
     });
 
-    it.skip('clears signedIn property when status is 401', async () => {
-      element.accessToken = 'test';
+    it('dispatches tokenexpired when status is 401', async () => {
       element.signedIn = true;
-      await nextFrame();
-      const ajax = element.shadowRoot.querySelector('iron-ajax');
-      ajax.dispatchEvent(new CustomEvent('error', {
-        detail: {
-          request: {
-            status: 401
-          }
-        }
-      }));
-      assert.isFalse(element.signedIn);
-    });
-
-    it.skip('dispatches tokenexpired when status is 401', () => {
-      element.accessToken = 'test';
-      element.signedIn = true;
+      element.accessToken = 'expired';
       const spy = sinon.spy();
       element.addEventListener('tokenexpired', spy);
-      const ajax = element.shadowRoot.querySelector('iron-ajax');
-      ajax.dispatchEvent(new CustomEvent('error', {
-        detail: {
-          request: {
-            status: 401
-          }
-        }
-      }));
+      await element.queryCurrent();
       assert.isTrue(spy.called);
     });
   });
 
   describe('[enableGrid]()', () => {
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
       await nextFrame();
@@ -748,7 +698,7 @@ describe('<exchange-search>', () => {
   });
 
   describe('[enableList]()', () => {
-    let element = /** @type ExchangeSearchPanelElement */ (null);
+    let element = /** @type ExchangeSearchElement */ (null);
     beforeEach(async () => {
       element = await noAutoFixture();
       await nextFrame();
