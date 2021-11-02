@@ -4,7 +4,6 @@ import '@anypoint-web-components/awc/anypoint-checkbox.js';
 import '@anypoint-web-components/awc/anypoint-radio-button.js';
 import '@anypoint-web-components/awc/anypoint-radio-group.js';
 import '@advanced-rest-client/arc-demo-helper/arc-interactive-demo.js';
-import '@advanced-rest-client/app/define/oauth2-authorization.js';
 import '../../define/exchange-search.js';
 import env from '../env.js';
 

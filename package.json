@@ -1,7 +1,7 @@
 {
   "name": "@advanced-rest-client/anypoint",
   "description": "A package for ARC with libraries to work with Anypoint Platform",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "Apache-2.0",
   "main": "index.js",
   "module": "index.js",
@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@advanced-rest-client/icons": "^4.0.0",
-    "@anypoint-web-components/anypoint-signin": "^8.0.0",
+    "@anypoint-web-components/anypoint-signin": "^8.0.1",
     "@anypoint-web-components/awc": "^1.0.7",
     "lit-element": "^2.5.1",
     "lit-html": "^1.4.1"
@@ -35,8 +35,8 @@
     "@advanced-rest-client/arc-demo-helper": "^5.0.2",
     "@advanced-rest-client/arc-mock": "^5.0.0",
     "@open-wc/eslint-config": "^7.0.0",
-    "@open-wc/testing": "^3.0.1",
-    "@web/dev-server": "^0.1.25",
+    "@open-wc/testing": "^3.0.2",
+    "@web/dev-server": "^0.1.26",
     "@web/test-runner": "^0.13.20",
     "@web/test-runner-playwright": "^0.8.8",
     "chalk": "^4.1.2",
